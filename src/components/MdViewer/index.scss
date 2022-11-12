@@ -1,0 +1,89 @@
+.md-viewer textarea {
+  background-color: transparent;
+}
+
+.md-viewer pre{
+  background-color: rgba(222, 253, 245, 0.864);
+}
+.md-viewer pre code{
+  color: black;
+}
+
+.md-viewer td {
+  background-color: transparent;
+}
+
+.md-viewer tr:nth-child(2n),
+.md-viewer th {
+  * {
+    background-color: rgba(180, 246, 234, 0.763);
+  }
+}
+
+.md-viewer h1,
+.md-viewer h2,
+.md-viewer h3,
+.md-viewer h4,
+.md-viewer h5 {
+  position: relative;
+  padding-left: 14px;
+  border: none;
+
+  &::before {
+    position: absolute;
+    content: "";
+    top: 1px;
+    bottom: 0;
+    left: 0;
+    border-radius: 999px;
+    width: 3px;
+  }
+}
+
+.md-viewer h1 {
+  &::before {
+    width: 4px;
+    background-color: rgb(7, 253, 224);
+  }
+}
+
+.md-viewer h2 {
+  &::before {
+    width: 3px;
+    background-color: rgb(5, 253, 245);
+  }
+}
+
+.md-viewer h3 {
+  &::before {
+    width: 2px;
+    background-color: rgb(5, 195, 253);
+  }
+}
+
+.md-viewer h4 {
+  &::before {
+    width: 2px;
+    background-color:rgb(5, 129, 253);
+  }
+}
+
+.md-viewer h5 {
+  &::before {
+    width: 2px;
+    background-color: rgb(18, 1, 255);
+  }
+}
+
+.md-viewer strong {
+  color: rgb(253, 4, 104);
+}
+
+.md-viewer code {
+  margin: 0.2rem;
+  color: rgba(253, 5, 5, 0.616);
+}
+
+.md-viewer a {
+  color:rgba(196, 78, 255, 0.833);
+}

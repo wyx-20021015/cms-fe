@@ -1,0 +1,34 @@
+.avatar{
+  width: 100px;
+  height: 100px;
+}
+.ant-layout-content{
+  overflow: auto;
+}
+.card{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.ant-card-body{
+  flex:1;
+}
+.ant-empty{
+  height: 100%;
+}
+.sex-icon svg{
+  width: 20px;
+  height: 20px;
+}
+
+.icon:hover{
+  animation: rotate infinite 1s;
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
