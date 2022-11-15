@@ -6,11 +6,14 @@ import {
   MenuUnfoldOutlined,
   QuestionCircleOutlined
 } from '@ant-design/icons'
-import { Layout, Menu, Popconfirm, MenuProps } from 'antd'
+import { Layout, Menu, Popconfirm, MenuProps, message } from 'antd'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import React, { useState } from 'react'
-import Token from '../../utils/token'
 import './index.scss'
+import { setLoginStatus } from '@/store/login.store'
+import useAppDispatch from '@/store/useAppDispatch'
+import useAppSelector from '@/store/useAppSelector'
+import { logout } from '@/service'
 
 const { Header, Sider, Content } = Layout
 
@@ -69,15 +72,23 @@ const items: MenuProps['items'] = [
 ]
 
 const LayOut = () => {
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  // const { userStore, loginStore, channelStore } = useStore()
+  const username = useAppSelector((state) => state.login.username)
+  console.log(username, 'layout获取的name')
   const [collapsed, setCollapsed] = useState(false)
   const path = useLocation().pathname + useLocation().search
   console.log(path)
-  const onConfirm = (value: any) => {
+  const onConfirm = async (value: any) => {
     console.log(value)
-    Token.removeToken()
-    navigate('/login')
+    dispatch(setLoginStatus({ isLogin: false, username: '加载中..' }))
+    const res = await logout()
+    if (res.success === true) {
+      navigate('/login')
+      await message.success('登出成功')
+      return
+    }
+    await message.error('登出失败!')
   }
   const [current, setCurrent] = useState(path)
   const onClick: MenuProps['onClick'] = (e) => {
@@ -122,7 +133,7 @@ const LayOut = () => {
                 <LogoutOutlined style={{ marginLeft: '30px' }} /> 退出
               </Popconfirm>
             </span>
-            <span className="user-info">{'wyx'}</span>
+            <span className="user-info">{username}</span>
           </span>
         </Header>
         <Content

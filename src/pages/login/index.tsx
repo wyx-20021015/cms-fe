@@ -3,13 +3,15 @@ import './index.scss'
 import { Card, Form, Input, Checkbox, Button, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../service'
-import Token from '../../utils/token'
+import { setLoginStatus } from '@/store/login.store'
+import useAppDispatch from '@/store/useAppDispatch'
 interface FormPorp {
   username: string
   password: string
 }
 function Login() {
   const navigate = useNavigate()
+  const dispath = useAppDispatch()
   async function onFinish(values: FormPorp) {
     console.log(values)
     // values：放置的是所有表单项中用户输入的内容
@@ -18,7 +20,7 @@ function Login() {
     const res = await login({ username, password })
     // 跳转首页
     if (res.success === true) {
-      Token.setToken(res.data.token)
+      dispath(setLoginStatus({ username: res.data, isLogin: true }))
       navigate('/', { replace: true })
       await message.success('登录成功')
     } else {
@@ -36,8 +38,6 @@ function Login() {
           validateTrigger={['onBlur', 'onChange']}
           initialValues={{
             remember: false
-            // username: '13811111111',
-            // password: '246810'
           }}
           onFinish={onFinish}
         >
@@ -46,16 +46,11 @@ function Login() {
             rules={[
               {
                 required: true,
-                message: '请输入手机号'
-              },
-              {
-                pattern: /^1[3-9]\d{9}$/,
-                message: '请输入正确的手机号',
-                validateTrigger: 'onChange'
+                message: '用户名必填'
               }
             ]}
           >
-            <Input size="large" placeholder="请输入手机号" />
+            <Input size="large" placeholder="请输入用户名" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -78,7 +73,16 @@ function Login() {
           >
             <Input.Password size="large" placeholder="请输入密码" />
           </Form.Item>
-          <Form.Item name="remember" valuePropName="checked">
+          <Form.Item
+            name="remember"
+            valuePropName="checked"
+            rules={[
+              {
+                pattern: /^true$/,
+                message: "请勾选'我已阅读并同意「用户协议」和「隐私条款」'"
+              }
+            ]}
+          >
             <Checkbox className="login-checkbox-label">
               我已阅读并同意「用户协议」和「隐私条款」
             </Checkbox>

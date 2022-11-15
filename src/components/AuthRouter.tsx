@@ -1,16 +1,38 @@
-import Token from '../utils/token'
 import { Navigate } from 'react-router-dom'
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 
 import PropsWithChildren from '../@types/PropsWithChildren'
-import { isString } from '../@types/typeGuards'
+import useAppDispatch from '@/store/useAppDispatch'
+import useAppSelector from '@/store/useAppSelector'
+import { setLoginStatus } from '@/store/login.store'
+import { verifyAuth } from '@/service'
 
 const AuthRouter: FC<PropsWithChildren> = ({ children }) => {
-  const token = Token.getToken()
-  if (isString(token)) {
-    return <>{children}</>
-  } else {
-    return <Navigate to="/login" replace></Navigate>
-  }
+  const [isLogin, setIsLogin] = useState<Boolean | null>(null)
+  const loginStatus = useAppSelector((state) => state.login.isLogin)
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    console.log('鉴权', loginStatus)
+    const w = async () => {
+      const res = await verifyAuth()
+      setIsLogin(res.success)
+      if (res.success === true) {
+        console.log(res.data, 'authrouter里设置的name')
+        dispatch(setLoginStatus({ isLogin: res.success, username: res.data }))
+      }
+    }
+    if (loginStatus !== true)
+      w().catch((e) => {
+        console.error(e)
+      })
+    else setIsLogin(loginStatus)
+  }, [])
+  return isLogin === true ? (
+    <>{children}</>
+  ) : isLogin === false ? (
+    <Navigate to="/login" replace></Navigate>
+  ) : (
+    <>loading...</>
+  )
 }
 export default AuthRouter

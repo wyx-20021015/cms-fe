@@ -1,23 +1,9 @@
 import wRequest from './wRequest'
 import User from '../shared/user'
 import FormValue from '../shared/FormValue'
+import offsetParam from '@/shared/offsetParam'
 
 const url = '/user'
-
-// interface offsetProps {
-//   offset: number
-//   limit: number | null
-// }
-
-// export async function fetchUser(data: offsetProps) {
-//   return await wRequest.get<User[]>({ url, data })
-// }
-export async function fetchUser() {
-  return await wRequest.get<User[]>({
-    url,
-    data: { offset: null, limit: null }
-  })
-}
 
 export async function fetchUserById(id: string) {
   return await wRequest.get<User>({
@@ -34,10 +20,14 @@ export async function deleteUser(id: string | undefined) {
 }
 
 export async function updateUser(data: User) {
+  console.log('update', data)
   return await wRequest.patch({ url, data })
 }
 
-export async function searchUser(data: FormValue) {
+export async function searchUser(data: FormValue & offsetParam) {
   console.log(data, `${url}/search`)
-  return await wRequest.post<User[]>({ url: `${url}/search`, data })
+  return await wRequest.post<{
+    data: User[]
+    count: number
+  }>({ url: `${url}/search`, data })
 }

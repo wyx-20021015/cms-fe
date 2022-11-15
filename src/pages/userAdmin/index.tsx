@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import User from '../../shared/user'
 import majors from '@/shared/majors'
 import grades from '@/shared/grades'
+import offsetParam from '@/shared/offsetParam'
+import type { FormInstance } from 'antd/es/form'
+import type { UploadFile, UploadProps } from 'antd/es/upload/interface'
 import {
   Card,
+  Upload,
   Table,
   Space,
   Button,
@@ -17,25 +21,28 @@ import {
   Dropdown,
   Typography,
   MenuProps,
-  Menu
+  Menu,
+  message,
+  Avatar
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import FormValue from '@/shared/FormValue'
 import {
+  createUser,
   deleteUser,
-  fetchUser,
   searchUser,
   updateUser
 } from '../../service/index'
 import avatarURL from '@/constants/avatarURL'
-import Token from '@/utils/token'
+// import Token from '@/utils/token'
 import './index.scss'
 import {
   SettingFilled,
   createFromIconfontCN,
   EditTwoTone,
   ProfileTwoTone,
-  DeleteTwoTone
+  DeleteTwoTone,
+  UploadOutlined
 } from '@ant-design/icons'
 
 const { Option } = Select
@@ -44,31 +51,25 @@ const MyIcon = createFromIconfontCN({
 })
 function UserAdmin() {
   const nav = useNavigate()
+
   const [open, setOpen] = useState(false)
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [modalText, setModalText] = useState('Content of the modal')
   const [isEditable, setIsEditable] = useState(false)
+  const [searchInfo, setSearchInfo] = useState<FormValue | null>()
   const [currUser, setCurrUser] = useState<User | null>(null)
   const [params, setParams] = useState({
     offset: 1,
     limit: 6
   })
-  const [showedData, setShowedData] = useState<User[]>([])
+  const [total, setTotal] = useState<number | null>()
   const [userData, setUserData] = useState<User[]>([])
-  const [option, setOption] = useState('')
+  const [option, setOption] = useState<
+    'editing' | 'delete' | 'update' | 'detail' | 'create' | null
+  >()
   useEffect(() => {
-    const loadList = async () => {
-      const res = await fetchUser()
-      console.log(res.data)
-      setUserData(res.data)
-    }
-    loadList().catch((e) => console.log(e))
-  }, [])
-  useEffect(() => {
-    const first = (params.offset - 1) * params.limit
-    const last = first + params.limit
-    setShowedData(userData.slice(first, last))
-  }, [userData, params])
+    loadData().catch((e) => console.log(e))
+  }, [params, searchInfo])
   const pageChange = (offset: number, limit: number) => {
     setParams({
       limit,
@@ -76,49 +77,76 @@ function UserAdmin() {
     })
   }
   const handleCancel = () => {
-    console.log('Clicked cancel button')
+    // console.log('Clicked cancel button')
     setOpen(false)
+    setIsEditable(false)
+    setCurrUser(null)
   }
   const handleOk = async () => {
+    let res
     setModalText('操作中,请勿离开...')
     setConfirmLoading(true)
     switch (option) {
       case 'delete':
-        await deleteUser(currUser?._id)
+        res = await deleteUser(currUser?._id)
         setConfirmLoading(false)
         setOpen(false)
-        setUserData(userData.filter((t) => t._id !== currUser?._id))
+        if (res.success === true) {
+          await message.success('成功删除')
+          await loadData()
+        } else await message.error('删除失败')
         break
       case 'update':
         setConfirmLoading(false)
         setOpen(false)
         setIsEditable(true)
+        setOption('editing')
         break
       case 'detail':
         nav(`/detail/${currUser?._id ?? 'none'}`)
         break
+      case 'editing':
+        form.submit()
+        break
+      case 'create':
+        form.submit()
+        break
+      default:
+        break
     }
+    // setCurrUser(null)
   }
 
   const desc = {
     delete: '删除',
     update: '修改',
-    detail: '查看'
+    detail: '查看',
+    create: '新建'
   }
 
+  const [descript, setDescript] = useState<string | null>()
+
   const openModal = (data: User, options: 'delete' | 'update' | 'detail') => {
+    setDescript(desc[options])
     setOption(options)
     setCurrUser(data)
-    const descript = desc[options]
-    setModalText(`确认${descript} ${data.name}?`)
-    setOpen(true)
   }
+  useEffect(() => {
+    if (currUser !== null && descript !== null) {
+      form.resetFields()
+      setModalText(`确认${descript!} ${currUser?.name ?? ''}`)
+      // console.log(currUser)
+      setOpen(true)
+    }
+  }, [currUser, descript])
 
   const columns: ColumnsType<User> = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
+      ellipsis: true,
+      width: 170,
       render: (text) => <a>{text}</a>
     },
     {
@@ -126,10 +154,7 @@ function UserAdmin() {
       dataIndex: 'avatar',
       key: 'avatar',
       render: (src) => (
-        <img
-          src={`${avatarURL}/${src as string}?token=${Token.getToken()!}`}
-          className="avatar"
-        ></img>
+        <img src={`${avatarURL}/${src as string}`} className="avatar"></img>
       )
     },
     {
@@ -162,7 +187,8 @@ function UserAdmin() {
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
+      width: 200
     },
     {
       title: '操作',
@@ -219,10 +245,84 @@ function UserAdmin() {
   }
 
   const onFinished = async (value: FormValue) => {
-    const { grade, name, sex, major } = value
-    const res = await searchUser({ grade, name, sex, major })
-    setUserData(res.data)
+    setParams({ ...params, offset: 1 })
+    setSearchInfo(value)
   }
+
+  const loadData = async () => {
+    const res = await searchUser({ ...params, ...searchInfo })
+    // console.log('search res', res.data.data)
+    setUserData(res.data.data)
+    setTotal(res.data.count)
+  }
+
+  const subMitEdit = async (name: any, value: any) => {
+    console.log(value.values, 'submit****')
+    let res
+    if (option === 'create') {
+      // console.log('创建新用户', { ...value.values })
+      res = await createUser({ ...value.values })
+      setCurrUser(null)
+      form.resetFields()
+      if (res.success === true) {
+        setConfirmLoading(false)
+        setIsEditable(false)
+        await message.success('创建成功')
+        await loadData()
+      } else {
+        await message.error('创建失败了')
+        setConfirmLoading(false)
+      }
+    } else {
+      res = await updateUser({ ...value.values, _id: currUser?._id })
+      setCurrUser(null)
+      form.resetFields()
+      if (res.success === true) {
+        setConfirmLoading(false)
+        setIsEditable(false)
+        await message.success('更新成功')
+        await loadData()
+      } else {
+        await message.error('更新失败了')
+        setConfirmLoading(false)
+      }
+    }
+  }
+
+  const [form] = Form.useForm()
+
+  const newStudent = () => {
+    setCurrUser(null)
+    setOption('create')
+    setIsEditable(true)
+    setConfirmLoading(false)
+  }
+
+  const uploadProps: UploadProps = {
+    name: 'avatar',
+    action: 'http://localhost:8000/upload',
+    // headers: {
+    //   authorization: 'authorization-text'
+    // },
+    accept: 'image/*',
+    withCredentials: true,
+    onChange: async (info: any) => {
+      if (info.file.status === 'done') {
+        const cUser = currUser
+        const avatar = info.file.response.data as string
+        console.log(avatar)
+        await message.success(`file uploaded successfully`)
+      } else if (info.file.status === 'error') {
+        await message.error(` file upload failed.`)
+      }
+    }
+  }
+
+  const getValueFromUpload = (args: any) => {
+    console.log(args, 'getvalue哦哦')
+    return args.fileList[0]?.response?.data ?? ' '
+  }
+
   return (
     <>
       <Modal
@@ -236,70 +336,141 @@ function UserAdmin() {
       >
         <p>{modalText}</p>
       </Modal>
-      <Modal open={isEditable} title="编辑用户" destroyOnClose={true}>
-        <Form
-          preserve={false}
-          autoComplete="off"
-          validateTrigger={['onChange']}
+      <Form.Provider onFormFinish={subMitEdit}>
+        <Modal
+          forceRender
+          open={isEditable}
+          title="编辑用户"
+          destroyOnClose={true}
+          okText="确认"
+          cancelText="取消"
+          onOk={handleOk}
+          onCancel={handleCancel}
+          afterClose={() => {
+            form.resetFields()
+          }}
         >
-          <Form.Item
-            name={`name`}
-            rules={[{ required: true, message: 'Please input username!' }]}
+          <Form
+            form={form}
+            name="edit-form"
+            preserve={false}
+            autoComplete="off"
+            validateTrigger={['onChange']}
+            initialValues={{
+              name: currUser?.name,
+              sex: currUser?.sex,
+              major: currUser?.major,
+              grade: currUser?.grade,
+              phone: currUser?.phone,
+              email: currUser?.email
+            }}
           >
-            <Input placeholder="编辑姓名"></Input>
-          </Form.Item>
-          <Form.Item name={`major`}>
-            <Select placeholder="请选择专业">
-              {majors.map((item, index) => (
-                <Option key={index} value={item}>
-                  {item}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name={`grade`}>
-            <Select placeholder="请选择年级">
-              {majors.map((item, index) => (
-                <Option key={index} value={item}>
-                  {item}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name={`name`}>
-            <Radio.Group>
-              <Radio value={'male'}>男</Radio>
-              <Radio value={'female'}>女</Radio>
-            </Radio.Group>
-          </Form.Item>
-          <Form.Item
-            name={`name`}
-            rules={[
-              { required: true, message: 'Please input phone number!' },
-              {
-                pattern: /^1[3-9]\d{9}$/,
-                message: 'please input correct phone number!',
-                validateTrigger: 'onChange'
-              }
-            ]}
-          >
-            <Input placeholder="编辑电话号码"></Input>
-          </Form.Item>
-          <Form.Item
-            name={`name`}
-            rules={[
-              { required: true, message: 'Please input email!' },
-              {
-                pattern: /^1[3-9]\d{9}$/,
-                message: 'please input correct phone number!',
-                validateTrigger: 'onChange'
-              }
-            ]}
-          >
-            <Input placeholder="编辑电子邮箱"></Input>
-          </Form.Item>
-        </Form>
-      </Modal>
+            <Form.Item
+              name={`name`}
+              label="姓名"
+              rules={[{ required: true, message: 'Please input name!' }]}
+            >
+              <Input placeholder="编辑姓名"></Input>
+            </Form.Item>
+            <Form.Item
+              name={`avatar`}
+              label="头像"
+              rules={[{ required: true, message: 'avatar is required' }]}
+              getValueFromEvent={getValueFromUpload}
+              initialValue={currUser?.avatar ?? ''}
+            >
+              <Upload {...uploadProps}>
+                {option !== 'create' && (
+                  <Avatar
+                    src={`${avatarURL}/${currUser?.avatar ?? ''}`}
+                    style={{ marginRight: '40px' }}
+                  ></Avatar>
+                )}
+
+                <Button icon={<UploadOutlined />}>Upload</Button>
+              </Upload>
+            </Form.Item>
+
+            <Form.Item
+              name={`major`}
+              label="专业"
+              rules={[
+                {
+                  required: true
+                }
+              ]}
+            >
+              <Select placeholder="请选择专业">
+                {majors.map((item, index) => (
+                  <Option key={index} value={item}>
+                    {item}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name={`grade`}
+              label="年级"
+              rules={[
+                {
+                  required: true
+                }
+              ]}
+            >
+              <Select placeholder="请选择年级">
+                {grades.map((item, index) => (
+                  <Option key={index} value={item}>
+                    {item}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name={`sex`}
+              label="性别"
+              rules={[
+                {
+                  required: true
+                }
+              ]}
+            >
+              <Radio.Group>
+                <Radio value={'male'}>男</Radio>
+                <Radio value={'female'}>女</Radio>
+              </Radio.Group>
+            </Form.Item>
+            <Form.Item
+              name={`phone`}
+              label="电话"
+              rules={[
+                { required: true, message: 'Please input phone number!' },
+                {
+                  pattern: /^1[3-9]\d{9}$/,
+                  message: 'please input correct phone number!',
+                  validateTrigger: 'onChange'
+                }
+              ]}
+            >
+              <Input placeholder="编辑电话号码"></Input>
+            </Form.Item>
+            <Form.Item
+              name={`email`}
+              label="邮箱"
+              rules={[
+                { required: true, message: 'Please input email!' },
+                {
+                  pattern: /^(.*)@(.*).(.*)$/,
+                  message: 'please input correct phone email!',
+                  validateTrigger: 'onChange'
+                }
+              ]}
+            >
+              <Input placeholder="编辑电子邮箱"></Input>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Form.Provider>
+
       <Card className="card">
         <Form initialValues={{ sex: '' }} onFinish={onFinished}>
           <Form.Item
@@ -358,18 +529,25 @@ function UserAdmin() {
             <Button type="primary" htmlType="submit" style={{ marginLeft: 80 }}>
               筛选
             </Button>
+            <Button
+              type="primary"
+              style={{ marginLeft: 80 }}
+              onClick={() => newStudent()}
+            >
+              新建用户
+            </Button>
           </Form.Item>
         </Form>
 
         <Table
           columns={columns}
-          dataSource={showedData}
+          dataSource={userData}
           pagination={{
             onChange: pageChange,
             pageSize: params.limit ?? 6,
             current: params.offset,
             hideOnSinglePage: false,
-            total: userData.length
+            total: total!
           }}
           rowKey={(record) => rowKey(record)}
         />

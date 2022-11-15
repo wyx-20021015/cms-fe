@@ -5,6 +5,12 @@ interface IProp {
 }
 const url = '/login'
 const login = async (data: IProp) => {
-  return await wRequest.post<{ token: string }>({ url, data })
+  return await wRequest.post<string>({ url, data })
 }
-export { login }
+const verifyAuth = async () => {
+  return await wRequest.get<string>({ url })
+}
+const logout = async () => {
+  return await wRequest.delete({ url })
+}
+export { login, verifyAuth, logout }

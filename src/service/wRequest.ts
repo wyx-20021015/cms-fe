@@ -6,9 +6,9 @@ import axios, {
 } from 'axios'
 import BASE_URL from '../constants/baseURL'
 import httpRes from '../shared/httpRes'
-import Token from '../utils/token'
-import { isString } from '../@types/typeGuards'
-const { getToken } = Token
+// import Token from '../utils/token'
+// import { isString } from '../@types/typeGuards'
+// const { getToken } = Token
 class WRequest {
   private readonly instance: AxiosInstance
   constructor() {
@@ -16,14 +16,15 @@ class WRequest {
       baseURL: BASE_URL,
       timeout: 5000
     })
+    this.instance.defaults.withCredentials = true
   }
 
   async request<T>(config: AxiosRequestConfig): Promise<httpRes<T>> {
     return await new Promise<any>((resolve, reject) => {
       this.instance.interceptors.request.use(
         (config) => {
-          const token = getToken()
-          if (isString(token)) config.headers!.Authorization = `Bearer ${token}`
+          // const token = getToken()
+          // if (isString(token)) config.headers!.Authorization = `Bearer ${token}`
           return config
         },
         (err) => {
