@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import User from '../../shared/user'
+import Stu from '../../shared/stu'
 import majors from '@/shared/majors'
 import grades from '@/shared/grades'
-import offsetParam from '@/shared/offsetParam'
-import type { FormInstance } from 'antd/es/form'
-import type { UploadFile, UploadProps } from 'antd/es/upload/interface'
+import type { UploadProps } from 'antd/es/upload/interface'
 import {
   Card,
   Upload,
@@ -27,12 +25,7 @@ import {
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import FormValue from '@/shared/FormValue'
-import {
-  createUser,
-  deleteUser,
-  searchUser,
-  updateUser
-} from '../../service/index'
+import { createStu, deleteStu, searchStu, updateStu } from '../../service/index'
 import avatarURL from '@/constants/avatarURL'
 // import Token from '@/utils/token'
 import './index.scss'
@@ -49,7 +42,7 @@ const { Option } = Select
 const MyIcon = createFromIconfontCN({
   scriptUrl: '//at.alicdn.com/t/c/font_3761217_q4y2h0eurq8.js' // 在 iconfont.cn 上生成
 })
-function UserAdmin() {
+function StuAdmin() {
   const nav = useNavigate()
 
   const [open, setOpen] = useState(false)
@@ -57,13 +50,13 @@ function UserAdmin() {
   const [modalText, setModalText] = useState('Content of the modal')
   const [isEditable, setIsEditable] = useState(false)
   const [searchInfo, setSearchInfo] = useState<FormValue | null>()
-  const [currUser, setCurrUser] = useState<User | null>(null)
+  const [currStu, setCurrStu] = useState<Stu | null>(null)
   const [params, setParams] = useState({
     offset: 1,
     limit: 6
   })
   const [total, setTotal] = useState<number | null>()
-  const [userData, setUserData] = useState<User[]>([])
+  const [stuData, setStuData] = useState<Stu[]>([])
   const [option, setOption] = useState<
     'editing' | 'delete' | 'update' | 'detail' | 'create' | null
   >()
@@ -77,10 +70,10 @@ function UserAdmin() {
     })
   }
   const handleCancel = () => {
-    // console.log('Clicked cancel button')
     setOpen(false)
     setIsEditable(false)
-    setCurrUser(null)
+    setOption(null)
+    setCurrStu(null)
   }
   const handleOk = async () => {
     let res
@@ -88,7 +81,7 @@ function UserAdmin() {
     setConfirmLoading(true)
     switch (option) {
       case 'delete':
-        res = await deleteUser(currUser?._id)
+        res = await deleteStu(currStu?._id)
         setConfirmLoading(false)
         setOpen(false)
         if (res.success === true) {
@@ -97,13 +90,15 @@ function UserAdmin() {
         } else await message.error('删除失败')
         break
       case 'update':
+        setOption('editing')
         setConfirmLoading(false)
         setOpen(false)
-        setIsEditable(true)
-        setOption('editing')
+        setTimeout(() => {
+          setIsEditable(true)
+        }, 50)
         break
       case 'detail':
-        nav(`/detail/${currUser?._id ?? 'none'}`)
+        nav(`/detail/${currStu?._id ?? 'none'}`)
         break
       case 'editing':
         form.submit()
@@ -114,7 +109,7 @@ function UserAdmin() {
       default:
         break
     }
-    // setCurrUser(null)
+    // setCurrStu(null)
   }
 
   const desc = {
@@ -126,21 +121,20 @@ function UserAdmin() {
 
   const [descript, setDescript] = useState<string | null>()
 
-  const openModal = (data: User, options: 'delete' | 'update' | 'detail') => {
+  const openModal = (data: Stu, options: 'delete' | 'update' | 'detail') => {
     setDescript(desc[options])
     setOption(options)
-    setCurrUser(data)
+    setCurrStu(data)
   }
   useEffect(() => {
-    if (currUser !== null && descript !== null) {
+    if (currStu !== null && descript !== null) {
       form.resetFields()
-      setModalText(`确认${descript!} ${currUser?.name ?? ''}`)
-      // console.log(currUser)
+      setModalText(`确认${descript!} ${currStu?.name ?? ''}`)
       setOpen(true)
     }
-  }, [currUser, descript])
+  }, [currStu, descript])
 
-  const columns: ColumnsType<User> = [
+  const columns: ColumnsType<Stu> = [
     {
       title: 'Name',
       dataIndex: 'name',
@@ -240,7 +234,7 @@ function UserAdmin() {
       fixed: 'right'
     }
   ]
-  const rowKey = (row: User) => {
+  const rowKey = (row: Stu) => {
     return row._id!
   }
 
@@ -250,19 +244,16 @@ function UserAdmin() {
   }
 
   const loadData = async () => {
-    const res = await searchUser({ ...params, ...searchInfo })
-    // console.log('search res', res.data.data)
-    setUserData(res.data.data)
+    const res = await searchStu({ ...params, ...searchInfo })
+    setStuData(res.data.data)
     setTotal(res.data.count)
   }
 
   const subMitEdit = async (name: any, value: any) => {
-    console.log(value.values, 'submit****')
     let res
     if (option === 'create') {
-      // console.log('创建新用户', { ...value.values })
-      res = await createUser({ ...value.values })
-      setCurrUser(null)
+      res = await createStu({ ...value.values })
+      setCurrStu(null)
       form.resetFields()
       if (res.success === true) {
         setConfirmLoading(false)
@@ -274,8 +265,8 @@ function UserAdmin() {
         setConfirmLoading(false)
       }
     } else {
-      res = await updateUser({ ...value.values, _id: currUser?._id })
-      setCurrUser(null)
+      res = await updateStu({ ...value.values, _id: currStu?._id })
+      setCurrStu(null)
       form.resetFields()
       if (res.success === true) {
         setConfirmLoading(false)
@@ -292,7 +283,7 @@ function UserAdmin() {
   const [form] = Form.useForm()
 
   const newStudent = () => {
-    setCurrUser(null)
+    setCurrStu(null)
     setOption('create')
     setIsEditable(true)
     setConfirmLoading(false)
@@ -300,7 +291,7 @@ function UserAdmin() {
 
   const uploadProps: UploadProps = {
     name: 'avatar',
-    action: 'http://localhost:8000/upload',
+    action: 'http://localhost:8000/api/upload',
     // headers: {
     //   authorization: 'authorization-text'
     // },
@@ -308,9 +299,8 @@ function UserAdmin() {
     withCredentials: true,
     onChange: async (info: any) => {
       if (info.file.status === 'done') {
-        const cUser = currUser
+        const cStu = currStu
         const avatar = info.file.response.data as string
-        console.log(avatar)
         await message.success(`file uploaded successfully`)
       } else if (info.file.status === 'error') {
         await message.error(` file upload failed.`)
@@ -319,7 +309,6 @@ function UserAdmin() {
   }
 
   const getValueFromUpload = (args: any) => {
-    console.log(args, 'getvalue哦哦')
     return args.fileList[0]?.response?.data ?? ' '
   }
 
@@ -357,12 +346,12 @@ function UserAdmin() {
             autoComplete="off"
             validateTrigger={['onChange']}
             initialValues={{
-              name: currUser?.name,
-              sex: currUser?.sex,
-              major: currUser?.major,
-              grade: currUser?.grade,
-              phone: currUser?.phone,
-              email: currUser?.email
+              name: currStu?.name,
+              sex: currStu?.sex,
+              major: currStu?.major,
+              grade: currStu?.grade,
+              phone: currStu?.phone,
+              email: currStu?.email
             }}
           >
             <Form.Item
@@ -377,12 +366,12 @@ function UserAdmin() {
               label="头像"
               rules={[{ required: true, message: 'avatar is required' }]}
               getValueFromEvent={getValueFromUpload}
-              initialValue={currUser?.avatar ?? ''}
+              initialValue={currStu?.avatar ?? ''}
             >
               <Upload {...uploadProps}>
-                {option !== 'create' && (
+                {option === 'editing' && (
                   <Avatar
-                    src={`${avatarURL}/${currUser?.avatar ?? ''}`}
+                    src={`${avatarURL}/${currStu?.avatar ?? ''}`}
                     style={{ marginRight: '40px' }}
                   ></Avatar>
                 )}
@@ -541,7 +530,7 @@ function UserAdmin() {
 
         <Table
           columns={columns}
-          dataSource={userData}
+          dataSource={stuData}
           pagination={{
             onChange: pageChange,
             pageSize: params.limit ?? 6,
@@ -555,4 +544,4 @@ function UserAdmin() {
     </>
   )
 }
-export default UserAdmin
+export default StuAdmin

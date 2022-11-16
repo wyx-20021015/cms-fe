@@ -75,12 +75,9 @@ const LayOut = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const username = useAppSelector((state) => state.login.username)
-  console.log(username, 'layout获取的name')
   const [collapsed, setCollapsed] = useState(false)
   const path = useLocation().pathname + useLocation().search
-  console.log(path)
   const onConfirm = async (value: any) => {
-    console.log(value)
     dispatch(setLoginStatus({ isLogin: false, username: '加载中..' }))
     const res = await logout()
     if (res.success === true) {
@@ -92,7 +89,6 @@ const LayOut = () => {
   }
   const [current, setCurrent] = useState(path)
   const onClick: MenuProps['onClick'] = (e) => {
-    console.log('****', e.key)
     setCurrent(e.key)
   }
   return (

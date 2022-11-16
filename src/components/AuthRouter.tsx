@@ -12,12 +12,10 @@ const AuthRouter: FC<PropsWithChildren> = ({ children }) => {
   const loginStatus = useAppSelector((state) => state.login.isLogin)
   const dispatch = useAppDispatch()
   useEffect(() => {
-    console.log('鉴权', loginStatus)
     const w = async () => {
       const res = await verifyAuth()
       setIsLogin(res.success)
       if (res.success === true) {
-        console.log(res.data, 'authrouter里设置的name')
         dispatch(setLoginStatus({ isLogin: res.success, username: res.data }))
       }
     }

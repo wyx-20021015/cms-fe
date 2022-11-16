@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { Breadcrumb, Card, Avatar } from 'antd'
-import { fetchUserById } from '../../service'
-import User from '../../shared/user'
+import { fetchStuById } from '../../service'
+import Stu from '../../shared/stu'
 import avatarURL from '@/constants/avatarURL'
 
 function Detail(props: any) {
   const location = useLocation()
   const id = location.pathname.split('/')[2]
-  const [currUser, setCurrUser] = useState<User | null>(null)
+  const [currStu, setCurrStu] = useState<Stu | null>(null)
   useEffect(() => {
     const loadData = async () => {
-      const res = await fetchUserById(id)
-      setCurrUser(res.data)
-      console.log(res)
+      const res = await fetchStuById(id)
+      setCurrStu(res.data)
     }
     loadData().catch((e) => console.log(e))
   }, [])
@@ -27,25 +26,25 @@ function Detail(props: any) {
           <a>查看详细</a>
         </Breadcrumb.Item>
       </Breadcrumb>
-      <Card title={`${currUser?.name ?? ''}`}>
+      <Card title={`${currStu?.name ?? ''}`}>
         <Card title={`姓名`} type="inner">
-          {currUser?.name}
+          {currStu?.name}
         </Card>
         <Card title={`头像`} type="inner">
-          {/* <Avatar src={currUser?.avatar}></Avatar> */}
-          <Avatar src={`${avatarURL}/${currUser?.avatar ?? ''}`} />
+          {/* <Avatar src={currStu?.avatar}></Avatar> */}
+          <Avatar src={`${avatarURL}/${currStu?.avatar ?? ''}`} />
         </Card>
         <Card title={`专业`} type="inner">
-          {currUser?.major}
+          {currStu?.major}
         </Card>
         <Card title={`年级`} type="inner">
-          {currUser?.grade}
+          {currStu?.grade}
         </Card>
         <Card title={`性别`} type="inner">
-          {currUser?.sex}
+          {currStu?.sex}
         </Card>
         <Card title={`邮箱`} type="inner">
-          {currUser?.email}
+          {currStu?.email}
         </Card>
       </Card>
     </>

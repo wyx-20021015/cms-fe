@@ -5,9 +5,9 @@ interface fileBuffer {
 interface filePath {
   filePath: string
 }
-const url = '/upload'
-const mdUrl = '/upload/md'
-const avatarUrl = '/upload/avatar'
+const url = '/api/upload'
+const mdUrl = '/api/upload/md'
+const avatarUrl = '/api/upload/avatar'
 
 // ??
 export async function uploadAvatar(data: fileBuffer) {
@@ -18,7 +18,6 @@ export async function uploadAvatar(data: fileBuffer) {
 }
 
 export async function fetchAvatar(filePath: string) {
-  console.log(`${avatarUrl}/${filePath}`, '**********')
   return await wRequest.get({
     url: `${avatarUrl}/${filePath}`
   })

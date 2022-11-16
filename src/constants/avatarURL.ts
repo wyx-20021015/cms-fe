@@ -1,3 +1,3 @@
 import baseURL from './baseURL'
-const avatarURL = `${baseURL}/upload/avatar`
+const avatarURL = `${baseURL}/api/upload/avatar`
 export default avatarURL

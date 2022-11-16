@@ -52,7 +52,7 @@ class WRequest {
           })
         })
         .finally(() => {
-          console.log(`end of request`)
+          // console.log(`end of request`)
         })
     })
   }

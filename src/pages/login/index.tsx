@@ -13,7 +13,6 @@ function Login() {
   const navigate = useNavigate()
   const dispath = useAppDispatch()
   async function onFinish(values: FormPorp) {
-    console.log(values)
     // values：放置的是所有表单项中用户输入的内容
     // todo:登录
     const { username, password } = values

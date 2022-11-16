@@ -1,4 +1,3 @@
-// import "./styles/index.scss";
 import * as React from 'react'
 import 'antd/dist/antd.min.css'
 
@@ -8,18 +7,13 @@ import About from './pages/about'
 import UserAdmin from './pages/userAdmin'
 import AuthRouter from './components/AuthRouter'
 import Detail from '@/pages/detail'
+import Notfound from '@/pages/notfound/notfound'
 
-import {
-  unstable_HistoryRouter as HistoryRouter,
-  Route,
-  Routes
-} from 'react-router-dom'
-import { History } from '@remix-run/router'
-import history from './utils/history'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 
 function App(): JSX.Element {
   return (
-    <HistoryRouter history={history as unknown as History}>
+    <HashRouter>
       <Routes>
         <Route path="/login" element={<Login />}></Route>
         <Route
@@ -34,8 +28,9 @@ function App(): JSX.Element {
           <Route path="about" element={<About />}></Route>
           <Route path="detail/*" element={<Detail />}></Route>
         </Route>
+        <Route path="/*" element={<Notfound />} />
       </Routes>
-    </HistoryRouter>
+    </HashRouter>
   )
 }
 

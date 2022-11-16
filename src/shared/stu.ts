@@ -1,5 +1,5 @@
 type Sex = 'male' | 'female'
-type User = {
+type Stu = {
   avatar: string
   name: string
   major: string
@@ -9,4 +9,4 @@ type User = {
   email: string
   _id?: string
 }
-export default User
+export default Stu
