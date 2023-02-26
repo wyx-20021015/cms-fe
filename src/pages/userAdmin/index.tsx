@@ -1,47 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Stu from '../../shared/stu'
-import majors from '@/shared/majors'
-import grades from '@/shared/grades'
-import type { UploadProps } from 'antd/es/upload/interface'
-import {
-  Card,
-  Upload,
-  Table,
-  Space,
-  Button,
-  Modal,
-  Form,
-  Select,
-  Input,
-  Radio,
-  Dropdown,
-  Typography,
-  MenuProps,
-  Menu,
-  message,
-  Avatar
-} from 'antd'
-import type { ColumnsType } from 'antd/es/table'
+
+import { Card, Form, message } from 'antd'
+import TableShow from '@/components/Table'
+import SearchForm from '@/components/searchForm'
+import ConfirmModal from '@/components/ConfirmModal'
+import ModalForm from '@/components/ModalForm'
 import FormValue from '@/shared/FormValue'
 import { createStu, deleteStu, searchStu, updateStu } from '../../service/index'
-import avatarURL from '@/constants/avatarURL'
-// import Token from '@/utils/token'
-import './index.scss'
-import {
-  SettingFilled,
-  createFromIconfontCN,
-  EditTwoTone,
-  ProfileTwoTone,
-  DeleteTwoTone,
-  UploadOutlined
-} from '@ant-design/icons'
 
-const { Option } = Select
-const MyIcon = createFromIconfontCN({
-  scriptUrl: '//at.alicdn.com/t/c/font_3761217_q4y2h0eurq8.js' // 在 iconfont.cn 上生成
-})
+import './index.scss'
+
 function StuAdmin() {
   const nav = useNavigate()
 
@@ -134,110 +105,6 @@ function StuAdmin() {
     }
   }, [currStu, descript])
 
-  const columns: ColumnsType<Stu> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      ellipsis: true,
-      width: 170,
-      render: (text) => <a>{text}</a>
-    },
-    {
-      title: 'avatar',
-      dataIndex: 'avatar',
-      key: 'avatar',
-      render: (src) => (
-        <img src={`${avatarURL}/${src as string}`} className="avatar"></img>
-      )
-    },
-    {
-      title: 'Major',
-      dataIndex: 'major',
-      key: 'major'
-    },
-    {
-      title: 'Grade',
-      dataIndex: 'grade',
-      key: 'grade'
-    },
-    {
-      title: 'Sex',
-      dataIndex: 'sex',
-      key: 'sex',
-      render: (sex: string) => {
-        return sex === 'female' ? (
-          <MyIcon type="icon-female" className="sex-icon"></MyIcon>
-        ) : (
-          <MyIcon type="icon-male" className="sex-icon"></MyIcon>
-        )
-      }
-    },
-    {
-      title: 'Phone number',
-      dataIndex: 'phone',
-      key: 'phone'
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-      width: 200
-    },
-    {
-      title: '操作',
-      render: (data) => {
-        return (
-          <Dropdown
-            arrow={false}
-            placement={'bottom'}
-            trigger={['click']}
-            overlay={() => {
-              return (
-                <Menu>
-                  <Menu.Item key="1">
-                    <Button
-                      icon={<ProfileTwoTone />}
-                      onClick={() => openModal(data, 'detail')}
-                    >
-                      详细
-                    </Button>
-                  </Menu.Item>
-                  <Menu.Item key="2">
-                    <Button
-                      icon={<EditTwoTone />}
-                      onClick={() => openModal(data, 'update')}
-                    >
-                      修改
-                    </Button>
-                  </Menu.Item>
-                  <Menu.Item key="3">
-                    <Button
-                      icon={<DeleteTwoTone />}
-                      onClick={() => openModal(data, 'delete')}
-                    >
-                      删除
-                    </Button>
-                  </Menu.Item>
-                </Menu>
-              )
-            }}
-          >
-            <Typography.Link>
-              <Space>
-                <SettingFilled className="icon" />
-              </Space>
-            </Typography.Link>
-          </Dropdown>
-        )
-      },
-      fixed: 'right'
-    }
-  ]
-  const rowKey = (row: Stu) => {
-    return row._id!
-  }
-
   const onFinished = async (value: FormValue) => {
     setParams({ ...params, offset: 1 })
     setSearchInfo(value)
@@ -289,256 +156,33 @@ function StuAdmin() {
     setConfirmLoading(false)
   }
 
-  const uploadProps: UploadProps = {
-    name: 'avatar',
-    action: 'http://localhost:8000/api/upload',
-    // headers: {
-    //   authorization: 'authorization-text'
-    // },
-    accept: 'image/*',
-    withCredentials: true,
-    onChange: async (info: any) => {
-      if (info.file.status === 'done') {
-        const cStu = currStu
-        const avatar = info.file.response.data as string
-        await message.success(`file uploaded successfully`)
-      } else if (info.file.status === 'error') {
-        await message.error(` file upload failed.`)
-      }
-    }
-  }
-
-  const getValueFromUpload = (args: any) => {
-    return args.fileList[0]?.response?.data ?? ' '
-  }
-
   return (
     <>
-      <Modal
-        title="Title"
-        open={open}
-        onOk={handleOk}
+      <ConfirmModal
+        isOpen={open}
+        handleOk={handleOk}
         confirmLoading={confirmLoading}
-        onCancel={handleCancel}
-        cancelText="取消"
-        okText="确认"
-      >
-        <p>{modalText}</p>
-      </Modal>
-      <Form.Provider onFormFinish={subMitEdit}>
-        <Modal
-          forceRender
-          open={isEditable}
-          title="编辑用户"
-          destroyOnClose={true}
-          okText="确认"
-          cancelText="取消"
-          onOk={handleOk}
-          onCancel={handleCancel}
-          afterClose={() => {
-            form.resetFields()
-          }}
-        >
-          <Form
-            form={form}
-            name="edit-form"
-            preserve={false}
-            autoComplete="off"
-            validateTrigger={['onChange']}
-            initialValues={{
-              name: currStu?.name,
-              sex: currStu?.sex,
-              major: currStu?.major,
-              grade: currStu?.grade,
-              phone: currStu?.phone,
-              email: currStu?.email
-            }}
-          >
-            <Form.Item
-              name={`name`}
-              label="姓名"
-              rules={[{ required: true, message: 'Please input name!' }]}
-            >
-              <Input placeholder="编辑姓名"></Input>
-            </Form.Item>
-            <Form.Item
-              name={`avatar`}
-              label="头像"
-              rules={[{ required: true, message: 'avatar is required' }]}
-              getValueFromEvent={getValueFromUpload}
-              initialValue={currStu?.avatar ?? ''}
-            >
-              <Upload {...uploadProps}>
-                {option === 'editing' && (
-                  <Avatar
-                    src={`${avatarURL}/${currStu?.avatar ?? ''}`}
-                    style={{ marginRight: '40px' }}
-                  ></Avatar>
-                )}
-
-                <Button icon={<UploadOutlined />}>Upload</Button>
-              </Upload>
-            </Form.Item>
-
-            <Form.Item
-              name={`major`}
-              label="专业"
-              rules={[
-                {
-                  required: true
-                }
-              ]}
-            >
-              <Select placeholder="请选择专业">
-                {majors.map((item, index) => (
-                  <Option key={index} value={item}>
-                    {item}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name={`grade`}
-              label="年级"
-              rules={[
-                {
-                  required: true
-                }
-              ]}
-            >
-              <Select placeholder="请选择年级">
-                {grades.map((item, index) => (
-                  <Option key={index} value={item}>
-                    {item}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name={`sex`}
-              label="性别"
-              rules={[
-                {
-                  required: true
-                }
-              ]}
-            >
-              <Radio.Group>
-                <Radio value={'male'}>男</Radio>
-                <Radio value={'female'}>女</Radio>
-              </Radio.Group>
-            </Form.Item>
-            <Form.Item
-              name={`phone`}
-              label="电话"
-              rules={[
-                { required: true, message: 'Please input phone number!' },
-                {
-                  pattern: /^1[3-9]\d{9}$/,
-                  message: 'please input correct phone number!',
-                  validateTrigger: 'onChange'
-                }
-              ]}
-            >
-              <Input placeholder="编辑电话号码"></Input>
-            </Form.Item>
-            <Form.Item
-              name={`email`}
-              label="邮箱"
-              rules={[
-                { required: true, message: 'Please input email!' },
-                {
-                  pattern: /^(.*)@(.*).(.*)$/,
-                  message: 'please input correct phone email!',
-                  validateTrigger: 'onChange'
-                }
-              ]}
-            >
-              <Input placeholder="编辑电子邮箱"></Input>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Form.Provider>
+        handleCancel={handleCancel}
+        modalText={modalText}
+      />
+      <ModalForm
+        subMitEdit={subMitEdit}
+        handleCancel={handleCancel}
+        handleOk={handleOk}
+        form={form}
+        currStu={currStu}
+        option={option}
+        isEditable={isEditable}
+      />
 
       <Card className="card">
-        <Form initialValues={{ sex: '' }} onFinish={onFinished}>
-          <Form.Item
-            label="年级"
-            name="grade"
-            style={{ display: 'inline-flex' }}
-          >
-            <Select
-              placeholder="请选择想要筛选的年级"
-              style={{ width: 120 }}
-              allowClear
-            >
-              {grades.map((item, index) => (
-                <Option key={index} value={item}>
-                  {item}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="专业"
-            name="major"
-            style={{ display: 'inline-flex', marginLeft: '40px' }}
-          >
-            <Select
-              placeholder="请选择想要筛选的专业"
-              style={{ width: 200 }}
-              allowClear
-            >
-              {majors.map((item, index) => (
-                <Option key={index} value={item}>
-                  {item}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="性别"
-            name="sex"
-            style={{ display: 'inline-flex', marginLeft: '40px' }}
-          >
-            <Radio.Group>
-              <Radio value={''}>全部</Radio>
-              <Radio value={'male'}>男</Radio>
-              <Radio value={'female'}>女</Radio>
-            </Radio.Group>
-          </Form.Item>
-          <Form.Item
-            label="姓名"
-            name="name"
-            style={{ display: 'inline-flex', marginLeft: '40px' }}
-          >
-            <Input placeholder="搜索姓名，支持模糊匹配" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" style={{ marginLeft: 80 }}>
-              筛选
-            </Button>
-            <Button
-              type="primary"
-              style={{ marginLeft: 80 }}
-              onClick={() => newStudent()}
-            >
-              新建用户
-            </Button>
-          </Form.Item>
-        </Form>
-
-        <Table
-          columns={columns}
-          dataSource={stuData}
-          pagination={{
-            onChange: pageChange,
-            pageSize: params.limit ?? 6,
-            current: params.offset,
-            hideOnSinglePage: false,
-            total: total!
-          }}
-          rowKey={(record) => rowKey(record)}
+        <SearchForm newStudent={newStudent} onFinished={onFinished} />
+        <TableShow
+          stuData={stuData}
+          pageChange={pageChange}
+          total={total}
+          openModal={openModal}
+          params={params}
         />
       </Card>
     </>

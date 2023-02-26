@@ -2,10 +2,10 @@
   background-color: transparent;
 }
 
-.md-viewer pre{
+.md-viewer pre {
   background-color: rgba(222, 253, 245, 0.864);
 }
-.md-viewer pre code{
+.md-viewer pre code {
   color: black;
 }
 
@@ -31,7 +31,7 @@
 
   &::before {
     position: absolute;
-    content: "";
+    content: '';
     top: 1px;
     bottom: 0;
     left: 0;
@@ -64,7 +64,7 @@
 .md-viewer h4 {
   &::before {
     width: 2px;
-    background-color:rgb(5, 129, 253);
+    background-color: rgb(5, 129, 253);
   }
 }
 
@@ -85,5 +85,5 @@
 }
 
 .md-viewer a {
-  color:rgba(196, 78, 255, 0.833);
+  color: rgba(196, 78, 255, 0.833);
 }

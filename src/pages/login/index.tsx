@@ -23,7 +23,7 @@ function Login() {
       navigate('/', { replace: true })
       await message.success('登录成功')
     } else {
-      await message.success('密码错误')
+      await message.error('登录失败')
     }
     // 提示用户
   }
@@ -65,7 +65,7 @@ function Login() {
               },
               {
                 min: 6,
-                message: '密码应在6-12位',
+                message: '密码应在6-18位',
                 validateTrigger: 'onChange'
               }
             ]}

@@ -1,27 +1,27 @@
-.avatar{
+.avatar {
   width: 100px;
   height: 100px;
 }
-.ant-layout-content{
+.ant-layout-content {
   overflow: auto;
 }
-.card{
+.card {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
-.ant-card-body{
-  flex:1;
+.ant-card-body {
+  flex: 1;
 }
-.ant-empty{
+.ant-empty {
   height: 100%;
 }
-.sex-icon svg{
+.sex-icon svg {
   width: 20px;
   height: 20px;
 }
 
-.icon:hover{
+.icon:hover {
   animation: rotate infinite 1s;
   @keyframes rotate {
     from {
